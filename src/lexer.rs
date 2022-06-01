@@ -52,7 +52,7 @@ impl Lexer {
                 token_type: EOF,
                 literal: "".to_string(),
             },
-            _ => panic!("unsupported token char"),
+            _ => panic!("unsupported token char {}", ascii::escape_default(self.ch)),
         };
         self.read_char();
         token
