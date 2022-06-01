@@ -1,20 +1,7 @@
+use phf::phf_map;
 use std::ascii;
 
 type TokenType = &'static str;
-
-pub struct Token {
-    pub token_type: TokenType,
-    pub literal: String,
-}
-
-impl Token {
-    pub fn new(token_type: TokenType, ch: u8) -> Self {
-        Self {
-            token_type,
-            literal: ascii::escape_default(ch).to_string(),
-        }
-    }
-}
 
 // signifies a token/character we don't know about
 pub const ILLEGAL: TokenType = "ILLEGAL";
@@ -41,6 +28,36 @@ pub const RBRACE: TokenType = "}";
 // keywords
 pub const FUNCTION: TokenType = "FUNCTION";
 pub const LET: TokenType = "LET";
+
+static KEYWORDS: phf::Map<&'static str, TokenType> = phf_map! {
+    "fn" => FUNCTION,
+    "let" => LET,
+};
+
+/// check the `KEYWORDS` table to see whether the given identifier is in fact a keyword
+/// if it is, it returns the keyword's `TokenType` constant.
+/// if it isn't, we just get back `IDENT`, which is the `TokenType` for all user-defined identifiers.
+pub fn lookup_ident(ident: &str) -> TokenType {
+    if KEYWORDS.contains_key(ident) {
+        KEYWORDS.get(ident).unwrap().to_owned()
+    } else {
+        IDENT
+    }
+}
+
+pub struct Token {
+    pub token_type: TokenType,
+    pub literal: String,
+}
+
+impl Token {
+    pub fn new(token_type: TokenType, ch: u8) -> Self {
+        Self {
+            token_type,
+            literal: ascii::escape_default(ch).to_string(),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -69,11 +86,11 @@ mod tests {
         let input = r#"
             let five = 5;
             let ten = 10;
-        
+                    
             let add = fn(x, y) {
                 x + y;
             };
-        
+                    
             let result = add(five, ten);
             "#;
         let lex = Lexer::new(input.to_string());
@@ -84,11 +101,11 @@ mod tests {
             (ASSIGN, "="),
             (INT, "5"),
             (SEMICOLON, ";"),
-            (ASSIGN, "let"),
-            (ASSIGN, "ten"),
+            (LET, "let"),
+            (IDENT, "ten"),
             (ASSIGN, "="),
-            (ASSIGN, "10"),
-            (ASSIGN, ";"),
+            (INT, "10"),
+            (SEMICOLON, ";"),
             (LET, "let"),
             (IDENT, "add"),
             (ASSIGN, "="),
@@ -135,6 +152,7 @@ mod tests {
                     i, expected_literal, token.literal
                 );
             }
+            // println!("{}", token.literal);
         }
     }
 }
