@@ -78,7 +78,6 @@ mod tests {
             "#;
         let lex = Lexer::new(input.to_string());
 
-        // {token.EOF, ""},
         let tests = vec![
             (LET, "let"),
             (IDENT, "five"),
