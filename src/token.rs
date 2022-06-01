@@ -1,39 +1,51 @@
+use std::ascii;
+
 type TokenType = &'static str;
 
-struct Token {
-    token_type: TokenType,
-    literal: String,
+pub struct Token {
+    pub token_type: TokenType,
+    pub literal: String,
+}
+
+impl Token {
+    pub fn new(token_type: TokenType, ch: u8) -> Self {
+        Self {
+            token_type,
+            literal: ascii::escape_default(ch).to_string(),
+        }
+    }
 }
 
 // signifies a token/character we don't know about
-const ILLEGAL: TokenType = "ILLEGAL";
+pub const ILLEGAL: TokenType = "ILLEGAL";
 // stands for "end of file", which tells our parser later on that it can stop
-const EOF: TokenType = "EOF";
+pub const EOF: TokenType = "EOF";
 
 // identifiers
-const IDENT: TokenType = "IDENT";
+pub const IDENT: TokenType = "IDENT";
 // literals
-const INT: TokenType = "INT";
+pub const INT: TokenType = "INT";
 
 // operators
-const ASSIGN: TokenType = "=";
-const PLUS: TokenType = "+";
+pub const ASSIGN: TokenType = "=";
+pub const PLUS: TokenType = "+";
 
 // delimiters
-const COMMA: TokenType = ",";
-const SEMICOLON: TokenType = ";";
-const LPAREN: TokenType = "(";
-const RPAREN: TokenType = ")";
-const LBRACE: TokenType = "{";
-const RBRACE: TokenType = "}";
+pub const COMMA: TokenType = ",";
+pub const SEMICOLON: TokenType = ";";
+pub const LPAREN: TokenType = "(";
+pub const RPAREN: TokenType = ")";
+pub const LBRACE: TokenType = "{";
+pub const RBRACE: TokenType = "}";
 
 // keywords
-const FUNCTION: TokenType = "FUNCTION";
-const LET: TokenType = "LET";
+pub const FUNCTION: TokenType = "FUNCTION";
+pub const LET: TokenType = "LET";
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lexer::Lexer;
 
     #[test]
     fn test_next_token() {
@@ -51,16 +63,33 @@ mod tests {
             (EOF, ""),
         ];
 
-        let lex = Lexer::new(input);
+        let mut lex = Lexer::new(input.to_string());
 
-        for tt in tests {
+        for (i, (expected_type, expected_literal)) in tests.into_iter().enumerate() {
             let token: Token = lex.next_token();
-            if token.token_type != tt.0 {
-                todo!()
+            if token.token_type != expected_type {
+                eprintln!(
+                    "tests[{}] - token_type wrong. expected={}, got={}",
+                    i, expected_type, token.token_type
+                );
             }
-            if token.literal.as_str() != tt.1 {
-                todo!()
+            if token.literal.as_str() != expected_literal {
+                eprintln!(
+                    "tests[{}] - literal wrong. expected={}, got={}",
+                    i, expected_literal, token.literal
+                );
             }
         }
     }
+
+    let shader = r#"
+    let five = 5;
+    let ten = 10;
+
+    let add = fn(x, y) {
+        x + y;
+    }
+
+    let result = add(five, ten);
+    "#;
 }
