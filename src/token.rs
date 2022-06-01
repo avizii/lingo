@@ -50,6 +50,7 @@ mod tests {
     #[test]
     fn test_next_token() {
         let input = "=+(){},;";
+        let lex = Lexer::new(input.to_string());
 
         let tests = vec![
             (ASSIGN, "="),
@@ -63,9 +64,65 @@ mod tests {
             (EOF, ""),
         ];
 
-        let mut lex = Lexer::new(input.to_string());
+        walk_through_input_token(lex, tests);
 
-        for (i, (expected_type, expected_literal)) in tests.into_iter().enumerate() {
+        let input = r#"
+            let five = 5;
+            let ten = 10;
+        
+            let add = fn(x, y) {
+                x + y;
+            };
+        
+            let result = add(five, ten);
+            "#;
+        let lex = Lexer::new(input.to_string());
+
+        // {token.EOF, ""},
+        let tests = vec![
+            (LET, "let"),
+            (IDENT, "five"),
+            (ASSIGN, "="),
+            (INT, "5"),
+            (SEMICOLON, ";"),
+            (ASSIGN, "let"),
+            (ASSIGN, "ten"),
+            (ASSIGN, "="),
+            (ASSIGN, "10"),
+            (ASSIGN, ";"),
+            (LET, "let"),
+            (IDENT, "add"),
+            (ASSIGN, "="),
+            (FUNCTION, "fn"),
+            (LPAREN, "("),
+            (IDENT, "x"),
+            (COMMA, ","),
+            (IDENT, "y"),
+            (RPAREN, ")"),
+            (LBRACE, "{"),
+            (IDENT, "x"),
+            (PLUS, "+"),
+            (IDENT, "y"),
+            (SEMICOLON, ";"),
+            (RBRACE, "}"),
+            (SEMICOLON, ";"),
+            (LET, "let"),
+            (IDENT, "result"),
+            (ASSIGN, "="),
+            (IDENT, "add"),
+            (LPAREN, "("),
+            (IDENT, "five"),
+            (COMMA, ","),
+            (IDENT, "ten"),
+            (RPAREN, ")"),
+            (SEMICOLON, ";"),
+            (EOF, ""),
+        ];
+        walk_through_input_token(lex, tests);
+    }
+
+    fn walk_through_input_token(mut lex: Lexer, expected_tokens: Vec<(TokenType, &str)>) {
+        for (i, (expected_type, expected_literal)) in expected_tokens.into_iter().enumerate() {
             let token: Token = lex.next_token();
             if token.token_type != expected_type {
                 eprintln!(
@@ -81,15 +138,4 @@ mod tests {
             }
         }
     }
-
-    let shader = r#"
-    let five = 5;
-    let ten = 10;
-
-    let add = fn(x, y) {
-        x + y;
-    }
-
-    let result = add(five, ten);
-    "#;
 }
