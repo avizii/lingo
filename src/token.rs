@@ -1,7 +1,8 @@
 use phf::phf_map;
 use std::ascii;
+use std::fmt::{Display, Formatter};
 
-type TokenType = &'static str;
+pub type TokenType = &'static str;
 
 // signifies a token/character we don't know about
 pub const ILLEGAL: TokenType = "ILLEGAL";
@@ -16,6 +17,14 @@ pub const INT: TokenType = "INT";
 // operators
 pub const ASSIGN: TokenType = "=";
 pub const PLUS: TokenType = "+";
+pub const MINUS: TokenType = "-";
+pub const BANG: TokenType = "!";
+pub const ASTERISK: TokenType = "*";
+pub const SLASH: TokenType = "/";
+pub const LT: TokenType = "<";
+pub const GT: TokenType = ">";
+pub const EQ: TokenType = "==";
+pub const NOT_EQ: TokenType = "!=";
 
 // delimiters
 pub const COMMA: TokenType = ",";
@@ -28,10 +37,20 @@ pub const RBRACE: TokenType = "}";
 // keywords
 pub const FUNCTION: TokenType = "FUNCTION";
 pub const LET: TokenType = "LET";
+pub const TRUE: TokenType = "TRUE";
+pub const FALSE: TokenType = "FALSE";
+pub const IF: TokenType = "IF";
+pub const ELSE: TokenType = "ELSE";
+pub const RETURN: TokenType = "RETURN";
 
 static KEYWORDS: phf::Map<&'static str, TokenType> = phf_map! {
     "fn" => FUNCTION,
     "let" => LET,
+    "true" => TRUE,
+    "false" => FALSE,
+    "if" => IF,
+    "else" => ELSE,
+    "return" => RETURN,
 };
 
 /// check the `KEYWORDS` table to see whether the given identifier is in fact a keyword
@@ -59,100 +78,8 @@ impl Token {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::lexer::Lexer;
-
-    #[test]
-    fn test_next_token() {
-        let input = "=+(){},;";
-        let lex = Lexer::new(input.to_string());
-
-        let tests = vec![
-            (ASSIGN, "="),
-            (PLUS, "+"),
-            (LPAREN, "("),
-            (RPAREN, ")"),
-            (LBRACE, "{"),
-            (RBRACE, "}"),
-            (COMMA, ","),
-            (SEMICOLON, ";"),
-            (EOF, ""),
-        ];
-
-        walk_through_input_token(lex, tests);
-
-        let input = r#"
-            let five = 5;
-            let ten = 10;
-                    
-            let add = fn(x, y) {
-                x + y;
-            };
-                    
-            let result = add(five, ten);
-            "#;
-        let lex = Lexer::new(input.to_string());
-
-        let tests = vec![
-            (LET, "let"),
-            (IDENT, "five"),
-            (ASSIGN, "="),
-            (INT, "5"),
-            (SEMICOLON, ";"),
-            (LET, "let"),
-            (IDENT, "ten"),
-            (ASSIGN, "="),
-            (INT, "10"),
-            (SEMICOLON, ";"),
-            (LET, "let"),
-            (IDENT, "add"),
-            (ASSIGN, "="),
-            (FUNCTION, "fn"),
-            (LPAREN, "("),
-            (IDENT, "x"),
-            (COMMA, ","),
-            (IDENT, "y"),
-            (RPAREN, ")"),
-            (LBRACE, "{"),
-            (IDENT, "x"),
-            (PLUS, "+"),
-            (IDENT, "y"),
-            (SEMICOLON, ";"),
-            (RBRACE, "}"),
-            (SEMICOLON, ";"),
-            (LET, "let"),
-            (IDENT, "result"),
-            (ASSIGN, "="),
-            (IDENT, "add"),
-            (LPAREN, "("),
-            (IDENT, "five"),
-            (COMMA, ","),
-            (IDENT, "ten"),
-            (RPAREN, ")"),
-            (SEMICOLON, ";"),
-            (EOF, ""),
-        ];
-        walk_through_input_token(lex, tests);
-    }
-
-    fn walk_through_input_token(mut lex: Lexer, expected_tokens: Vec<(TokenType, &str)>) {
-        for (i, (expected_type, expected_literal)) in expected_tokens.into_iter().enumerate() {
-            let token: Token = lex.next_token();
-            if token.token_type != expected_type {
-                eprintln!(
-                    "tests[{}] - token_type wrong. expected={}, got={}",
-                    i, expected_type, token.token_type
-                );
-            }
-            if token.literal.as_str() != expected_literal {
-                eprintln!(
-                    "tests[{}] - literal wrong. expected={}, got={}",
-                    i, expected_literal, token.literal
-                );
-            }
-            // println!("{}", token.literal);
-        }
+impl Display for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[Type:{}, Literal: {}]", self.token_type, self.literal)
     }
 }
