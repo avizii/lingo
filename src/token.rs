@@ -64,6 +64,7 @@ pub fn lookup_ident(ident: &str) -> TokenType {
     }
 }
 
+#[derive(Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,
