@@ -78,7 +78,7 @@ pub struct LetStatement {
     /// hold the identifier of the binding
     pub name: Identifier,
     /// the expression that produces the value
-    pub value: Box<dyn Expression>,
+    pub value: Option<Box<dyn Expression>>, // TODO
 }
 
 impl Node for LetStatement {}
