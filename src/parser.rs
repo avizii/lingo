@@ -216,7 +216,6 @@ mod tests {
             );
             return false;
         };
-
         true
     }
 }
