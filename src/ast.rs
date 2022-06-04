@@ -73,6 +73,10 @@ impl Expression for Identifier {
     }
 }
 
+/// let-statement form is as following:
+/// ```
+/// let <identifier> = <expression>;
+/// ```
 pub struct LetStatement {
     pub token: Token,
     /// hold the identifier of the binding
@@ -84,6 +88,31 @@ pub struct LetStatement {
 impl Node for LetStatement {}
 
 impl Statement for LetStatement {
+    fn statement_node(&self) {}
+
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// return-statement's form is as following:
+/// ```
+/// return <expression>;
+/// ```
+pub struct ReturnStatement {
+    /// initial token
+    pub token: Token,
+    /// contain the expression that is to be returned
+    pub return_value: Option<Box<dyn Expression>>, // TODO
+}
+
+impl Node for ReturnStatement {}
+
+impl Statement for ReturnStatement {
     fn statement_node(&self) {}
 
     fn token_literal(&self) -> &str {

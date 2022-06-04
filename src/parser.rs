@@ -1,6 +1,6 @@
-use crate::ast::{Identifier, LetStatement, Program, Statement};
+use crate::ast::{Identifier, LetStatement, Program, ReturnStatement, Statement};
 use crate::lexer::Lexer;
-use crate::token::{Token, TokenType, ASSIGN, EOF, IDENT, LET, SEMICOLON};
+use crate::token::{Token, TokenType, ASSIGN, EOF, IDENT, LET, RETURN, SEMICOLON};
 
 pub struct Parser {
     lexer: Lexer,
@@ -48,6 +48,13 @@ impl Parser {
                     Some(let_stat) => Some(Box::new(let_stat)),
                 }
             }
+            token_return if token_return == RETURN => {
+                let return_stat = self.parse_return_statement();
+                match return_stat {
+                    None => None,
+                    Some(return_stat) => Some(Box::new(return_stat)),
+                }
+            }
             _ => None,
         }
     }
@@ -77,6 +84,22 @@ impl Parser {
             token: cur_token,
             name: ident_name,
             value: None, // TODO
+        })
+    }
+
+    fn parse_return_statement(&mut self) -> Option<ReturnStatement> {
+        let cur_token = self.cur_token.clone();
+
+        self.next_token();
+
+        // TODO: we're skipping the expressions until we encounter a semicolon
+        while !self.cur_token_is(SEMICOLON) {
+            self.next_token();
+        }
+
+        Some(ReturnStatement {
+            token: cur_token,
+            return_value: None, //TODO
         })
     }
 
@@ -114,7 +137,7 @@ impl Parser {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::{Expression, LetStatement, Program, Statement};
+    use crate::ast::{Expression, LetStatement, Program, ReturnStatement, Statement};
     use crate::lexer::Lexer;
     use crate::parser::Parser;
 
@@ -127,7 +150,7 @@ mod tests {
         let foobar = 838383;
         "#;
 
-        lingo_source_code_parser(input);
+        lingo_source_code_parser(input, 3);
 
         // invalid input where tokens are missing
         let input = r#"
@@ -135,10 +158,51 @@ mod tests {
         let = 10;
         let 838383;
         "#;
-        lingo_source_code_parser(input);
+        lingo_source_code_parser(input, 3);
     }
 
-    fn lingo_source_code_parser(code: &str) {
+    #[test]
+    fn test_return_statements() {
+        let input = r#"
+        return 5;
+        return 10;
+        return 993322;
+        "#;
+
+        let mut lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+
+        let program = parser.parse_program();
+        check_parser_errors(&parser);
+
+        match program {
+            None => eprintln!("parse_program return none"),
+            Some(program) => {
+                if program.statements.len() != 3 {
+                    eprintln!(
+                        "program statements does not contain 3 statements. got={}",
+                        program.statements.len()
+                    );
+                };
+
+                for stat in program.statements {
+                    let return_stat = stat
+                        .as_any()
+                        .downcast_ref::<ReturnStatement>()
+                        .expect("statement not ReturnStatement");
+
+                    if return_stat.token_literal() != "return" {
+                        eprintln!(
+                            "return_statement token_literal not 'return', got {}",
+                            return_stat.token_literal()
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    fn lingo_source_code_parser(code: &str, len: usize) {
         let mut lexer = Lexer::new(code.to_string());
         let mut parser = Parser::new(lexer);
 
@@ -148,7 +212,7 @@ mod tests {
         match program {
             None => eprintln!("parse_program returned none"),
             Some(program) => {
-                if program.statements.len() != 3 {
+                if program.statements.len() != len {
                     eprintln!(
                         "program statements does not contain 3 statements. got={}",
                         program.statements.len()
