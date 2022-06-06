@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 phf = { version = "0.10", features = ["macros"] }
+iota = "0.2.2"
