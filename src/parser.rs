@@ -267,17 +267,15 @@ impl Parser {
                 while !self.peek_token_is(SEMICOLON) && precedence < self.peek_precedence() {
                     let infix_fn = self.infix_parse_fns.get(self.peek_token.token_type);
                     if let Some(infix_fn) = infix_fn {
-                        // TODO why here call can't not compile
+                        // TODO why blow code for function call can not compile
                         // self.next_token();
 
                         self.cur_token = self.peek_token.clone();
                         self.peek_token = self.lexer.next_token();
 
-                        {
-                            let infix_expression: Box<dyn Expression> =
-                                infix_fn(self, expression.unwrap());
-                            expression = Some(infix_expression);
-                        }
+                        let infix_expression: Box<dyn Expression> =
+                            infix_fn(self, expression.unwrap());
+                        expression = Some(infix_expression);
                     }
                 }
 
