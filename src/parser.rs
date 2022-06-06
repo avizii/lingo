@@ -590,6 +590,18 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_expression_precedence_parsing() {
+        let input = "2 + 2 + 3 * 1 - 2 + 5 * 4 - 1";
+        let mut lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+
+        let program = parser.parse_program().unwrap();
+        check_parser_errors(&parser);
+
+        println!("{}", program.format());
+    }
+
     fn lingo_source_code_parser(code: &str, len: usize) {
         let mut lexer = Lexer::new(code.to_string());
         let mut parser = Parser::new(lexer);
