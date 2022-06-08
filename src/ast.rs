@@ -165,6 +165,34 @@ impl Expression for InfixExpression {
     fn expression_node(&self) {}
 }
 
+pub struct Boolean {
+    pub token: Token,
+    pub value: bool,
+}
+
+impl Node for Boolean {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn format(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Expression for Boolean {
+    fn expression_node(&self) {}
+}
+
+pub struct IfExpression {
+    pub token: Token,
+    pub condition: Box<dyn Expression>,
+}
+
 /// let-statement form is as following:
 /// ```
 /// let <identifier> = <expression>;

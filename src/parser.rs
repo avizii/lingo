@@ -1,11 +1,11 @@
 use crate::ast::{
-    Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement,
-    PrefixExpression, Program, ReturnStatement, Statement,
+    Boolean, Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral,
+    LetStatement, PrefixExpression, Program, ReturnStatement, Statement,
 };
 use crate::lexer::Lexer;
 use crate::token::{
-    Token, TokenType, ASSIGN, ASTERISK, BANG, EOF, EQ, GT, IDENT, INT, LET, LT, MINUS, NOT_EQ,
-    PLUS, RETURN, SEMICOLON, SLASH,
+    Token, TokenType, ASSIGN, ASTERISK, BANG, EOF, EQ, FALSE, GT, IDENT, INT, LET, LPAREN, LT,
+    MINUS, NOT_EQ, PLUS, RETURN, RPAREN, SEMICOLON, SLASH, TRUE,
 };
 use iota::iota;
 use phf::phf_map;
@@ -93,11 +93,34 @@ impl Parser {
                 })
             };
 
+        let parse_prefix_boolean_fn: fn(&mut Parser) -> Box<dyn Expression> =
+            |parser: &mut Parser| {
+                Box::new(Boolean {
+                    token: parser.cur_token.clone(),
+                    value: parser.cur_token_is(TRUE),
+                })
+            };
+
+        let parse_prefix_grouped_expression_fn: fn(&mut Parser) -> Box<dyn Expression> =
+            |parser: &mut Parser| {
+                parser.next_token();
+
+                let expression = parser.parse_expression(LOWEST).unwrap();
+
+                if !parser.expect_peek(RPAREN) {
+                    eprintln!("expect RPAREN error.")
+                }
+                expression
+            };
+
         let mut prefix_parse_fns = HashMap::new();
         prefix_parse_fns.insert(IDENT, parse_identifier_fn);
         prefix_parse_fns.insert(INT, parse_integer_literal_fn);
         prefix_parse_fns.insert(BANG, parse_prefix_expression_fn);
         prefix_parse_fns.insert(MINUS, parse_prefix_expression_fn);
+        prefix_parse_fns.insert(TRUE, parse_prefix_boolean_fn);
+        prefix_parse_fns.insert(FALSE, parse_prefix_boolean_fn);
+        prefix_parse_fns.insert(LPAREN, parse_prefix_grouped_expression_fn);
 
         let parse_infix_expression_fn: fn(&mut Parser, Box<dyn Expression>) -> Box<dyn Expression> =
             |parser: &mut Parser, left: Box<dyn Expression>| {
@@ -288,6 +311,13 @@ impl Parser {
         Box::new(Identifier {
             token: self.cur_token.clone(),
             value: self.cur_token.literal.clone(),
+        })
+    }
+
+    fn parse_boolean(&self) -> Box<dyn Expression> {
+        Box::new(Boolean {
+            token: self.cur_token.clone(),
+            value: self.cur_token_is(TRUE),
         })
     }
 
